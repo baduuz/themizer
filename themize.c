@@ -68,7 +68,8 @@ int main(int argc, char **argv)
 
 void usage()
 {
-	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]");
+	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
+		"[-f format]");
 }
 
 void read_args(int argc, char **argv)
@@ -80,6 +81,8 @@ void read_args(int argc, char **argv)
 				die("Expected an output file");
 			output_path = argv[i];
 		} else if (!strcmp(argv[i], "-i")) {
+			if (input_path)
+				usage();
 			if ((++i) == argc)
 				die("Expected an input file");
 			input_path = argv[i];
@@ -87,10 +90,12 @@ void read_args(int argc, char **argv)
 			if ((++i) == argc)
 				die("Expected a palette file");
 			palette_path = argv[i];
-		} else if (!strcmp(argv[i], "-t")) {
+		} else if (!strcmp(argv[i], "-f")) {
 			if ((++i) == argc)
 				die("Expected an output format");
 			output_extension = argv[i];
+		} else if (i == 1) {
+			input_path = argv[i];
 		} else {
 			usage();
 		}
