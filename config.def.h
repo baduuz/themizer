@@ -1,1 +1,1 @@
-static int jpeg_quality = 90;
+static int jpeg_quality = 80;

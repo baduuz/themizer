@@ -19,21 +19,22 @@ struct image {
 	int width, height, components;
 };
 
-enum file_type {
-	FILETYPE_JPEG,
-	FILETYPE_PNG
+enum format {
+	FORMAT_JPEG,
+	FORMAT_PNG,
+	FORMAT_BMP
 };
 
 static char *output_path = NULL;
 static char *input_path = NULL;
 static char *palette_path = NULL;
-static enum file_type output_file_type = FILETYPE_PNG;
+static enum format output_format = FORMAT_JPEG;
 
 void usage();
 void read_args(int argc, char **argv);
 struct palette create_palette(FILE *palette_file);
 void apply_palette(struct image image, struct palette palette);
-void write_image(struct image image, enum file_type file_type);
+void write_image(struct image image, enum format format);
 
 int main(int argc, char **argv)
 {
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
 	apply_palette(image, palette);
 	free(palette.data);
 
-	write_image(image, output_file_type);
+	write_image(image, output_format);
 	free(image.data);
 
 
@@ -87,7 +88,7 @@ void read_args(int argc, char **argv)
 			palette_path = argv[i];
 		} else if (!strcmp(argv[i], "-t")) {
 			if ((++i) == argc)
-				die("Expected an output filetype");
+				die("Expected an output format");
 			output_extension = argv[i];
 		} else {
 			usage();
@@ -99,20 +100,22 @@ void read_args(int argc, char **argv)
 	if (!output_path)
 		die("You need to specify an output file");
 	if (!palette_path)
-		die("You need to specify an output file");
+		die("You need to specify a palette file");
 
 	if (!output_extension) {
 		output_extension = extension(output_path);
 		if (!output_extension)
-			die("Couldn't determine filetype");
+			die("Couldn't determine output format");
 	}
 
 	if (!strcasecmp(output_extension, "png"))
-		output_file_type = FILETYPE_PNG;
+		output_format = FORMAT_PNG;
 	else if (!strcasecmp(output_extension, "jpg") || !strcasecmp(output_extension, "jpeg"))
-		output_file_type = FILETYPE_JPEG;
+		output_format = FORMAT_JPEG;
+	else if (!strcasecmp(output_extension, "bmp"))
+		output_format = FORMAT_BMP;
 	else
-		die("Filetype not supported: %s", output_extension);
+		die("Format not supported: %s", output_extension);
 
 }
 
@@ -163,15 +166,19 @@ void apply_palette(struct image image, struct palette palette)
 	}
 }
 
-void write_image(struct image image, enum file_type file_type)
+void write_image(struct image image, enum format format)
 {
-	switch (file_type) {
-	case FILETYPE_JPEG:
+	switch (format) {
+	case FORMAT_JPEG:
 		if (!stbi_write_jpg(output_path, image.width, image.height, image.components, image.data, jpeg_quality))
 			goto write_failed;
 		return;
-	case FILETYPE_PNG:
+	case FORMAT_PNG:
 		if (!stbi_write_png(output_path, image.width, image.height, image.components, image.data, image.width * image.components))
+			goto write_failed;
+		return;
+	case FORMAT_BMP:
+		if (!stbi_write_bmp(output_path, image.width, image.height, image.components, image.data))
 			goto write_failed;
 		return;
 	}
