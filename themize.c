@@ -8,13 +8,13 @@
 #include "config.h"
 
 
-static char *output_file = NULL;
-static char *input_file = NULL;
-static char *palette_file = NULL;
+static char *output_path = NULL;
+static char *input_path = NULL;
+static char *palette_path = NULL;
 
 void usage();
 void read_args(int argc, char **argv);
-uint32_t *create_palette(FILE *pfile, size_t *out_size);
+uint32_t *create_palette(FILE *palette_file, size_t *out_size);
 void apply_palette(unsigned char *image, int image_width, int image_height, int image_components, uint32_t *palette, size_t palette_size);
 
 int main(int argc, char **argv)
@@ -22,25 +22,26 @@ int main(int argc, char **argv)
 	read_args(argc, argv);
 
 	int image_width, image_height, image_components;
-	unsigned char *image = stbi_load(input_file, &image_width, &image_height, &image_components, 0);
+	unsigned char *image = stbi_load(input_path, &image_width, &image_height, &image_components, 0);
 	if (!image)
 		die("Failed to load image");
 	if (image_components < 3)
 		die("Only works with images that have 3 or more components");
 
-	FILE *pfile = fopen(palette_file, "r");
-	if (!pfile)
+	FILE *palette_file = fopen(palette_path, "r");
+	if (!palette_file)
 		die("Failed to load palette file");
 	size_t palette_size;
-	uint32_t *palette = create_palette(pfile, &palette_size);
+	uint32_t *palette = create_palette(palette_file, &palette_size);
+	fclose(palette_file);
 	if (!palette)
 		die("Palette cannot be empty");
 
 	apply_palette(image, image_width, image_height, image_components, palette, palette_size);
-	stbi_write_jpg(output_file, image_width, image_height, image_components, image, jpeg_quality);
+	if (!stbi_write_jpg(output_path, image_width, image_height, image_components, image, jpeg_quality))
+		die("Failed to save to output image");
 
 	free(palette);
-	fclose(pfile);
 	free(image);
 
 	return 0;
@@ -52,40 +53,40 @@ void read_args(int argc, char **argv)
 		if (!strcmp(argv[i], "-o")) {
 			if ((++i) == argc)
 				die("Expected an output file");
-			output_file = argv[i];
+			output_path = argv[i];
 		} else if (!strcmp(argv[i], "-i")) {
 			if ((++i) == argc)
 				die("Expected an input file");
-			input_file = argv[i];
+			input_path = argv[i];
 		} else if (!strcmp(argv[i], "-p")) {
 			if ((++i) == argc)
 				die("Expected a palette file");
-			palette_file = argv[i];
+			palette_path = argv[i];
 		} else {
 			usage();
 		}
 	}
 
-	if (!input_file)
+	if (!input_path)
 		die("You need to specify an input file");
-	if (!output_file)
+	if (!output_path)
 		die("You need to specify an output file");
-	if (!palette_file)
+	if (!palette_path)
 		die("You need to specify an output file");
 }
 
 void usage()
 {
-	die("usage: themize [-i input_file] [-o output_file] [-p palette_file]");
+	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]");
 }
 
-uint32_t *create_palette(FILE *pfile, size_t *out_size)
+uint32_t *create_palette(FILE *palette_file, size_t *out_size)
 {
 	size_t palette_size = 0;
 	uint32_t *palette = NULL;
 
 	char line[512];
-	while (fgets(line, LENGTH(line), pfile)) {
+	while (fgets(line, LENGTH(line), palette_file)) {
 		palette_size++;
 		if (!(palette = realloc(palette, palette_size * sizeof(*palette))))
 			die("Out of memory");
