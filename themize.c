@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 void usage()
 {
 	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
-		" [-f format]");
+		" [-f format] [-d distance_function]");
 }
 
 void read_args(int argc, char **argv)
@@ -94,6 +94,15 @@ void read_args(int argc, char **argv)
 			if ((++i) == argc)
 				die("Expected an output format");
 			output_extension = argv[i];
+		} else if (!strcmp(argv[i], "-d")) {
+			if ((++i) == argc)
+				die("Expected a distance function");
+			if (!strcmp(argv[i], "linear"))
+				distance_function = 1;
+			else if (!strcmp(argv[i], "squared"))
+				distance_function = 0;
+			else
+				die("Unknown distance function");
 		} else {
 			usage();
 		}
@@ -156,7 +165,11 @@ void apply_palette(struct image image, struct palette palette)
 			int palette_green = (palette.data[j] >> 8) & 0xff;
 			int palette_blue = palette.data[j] & 0xff;
 
-			size_t distance = SQR(palette_red-image_red) + SQR(palette_green-image_green) + SQR(palette_blue-image_blue);
+			size_t distance;
+			if (distance_function == 1)
+				distance = abs(palette_red-image_red) + abs(palette_green-image_green) + abs(palette_blue-image_blue);
+			else
+				distance = SQR(palette_red-image_red) + SQR(palette_green-image_green) + SQR(palette_blue-image_blue);
 			if (distance < best_distance) {
 				best_distance = distance;
 				new_red = palette_red;
