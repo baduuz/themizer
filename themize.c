@@ -4,15 +4,14 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include "util.h"
+#include "config.h"
 
-#define SQR(x) (x)*(x)
-#define LENGTH(arr) (sizeof(arr)/sizeof(arr[0]))
 
-char *output_file = NULL;
-char *input_file = NULL;
-char *palette_file = NULL;
+static char *output_file = NULL;
+static char *input_file = NULL;
+static char *palette_file = NULL;
 
-void die(const char *fmt, ...);
 void usage();
 void read_args(int argc, char **argv);
 uint32_t *create_palette(FILE *pfile, size_t *out_size);
@@ -38,23 +37,13 @@ int main(int argc, char **argv)
 		die("Palette cannot be empty");
 
 	apply_palette(image, image_width, image_height, image_components, palette, palette_size);
-	stbi_write_jpg(output_file, image_width, image_height, image_components, image, 90);
+	stbi_write_jpg(output_file, image_width, image_height, image_components, image, jpeg_quality);
 
 	free(palette);
 	fclose(pfile);
 	free(image);
 
 	return 0;
-}
-
-void die(const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "\n");
-	exit(1);
 }
 
 void read_args(int argc, char **argv)
