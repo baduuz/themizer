@@ -13,3 +13,14 @@ void die(const char *fmt, ...)
 	fprintf(stderr, "\n");
 	exit(1);
 }
+
+char *extension(char *path)
+{
+	char *last_dot = NULL;
+	while (*path) {
+		if (*path == '.' && *(path+1))
+			last_dot = path;
+		path++;
+	}
+	return last_dot ? last_dot+1 : last_dot;
+}

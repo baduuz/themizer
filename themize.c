@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <strings.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -6,11 +8,6 @@
 
 #include "util.h"
 #include "config.h"
-
-
-static char *output_path = NULL;
-static char *input_path = NULL;
-static char *palette_path = NULL;
 
 struct palette {
 	uint32_t *data;
@@ -22,10 +19,21 @@ struct image {
 	int width, height, components;
 };
 
+enum file_type {
+	FILETYPE_JPEG,
+	FILETYPE_PNG
+};
+
+static char *output_path = NULL;
+static char *input_path = NULL;
+static char *palette_path = NULL;
+static enum file_type output_file_type = FILETYPE_PNG;
+
 void usage();
 void read_args(int argc, char **argv);
 struct palette create_palette(FILE *palette_file);
 void apply_palette(struct image image, struct palette palette);
+void write_image(struct image image, enum file_type file_type);
 
 int main(int argc, char **argv)
 {
@@ -41,24 +49,29 @@ int main(int argc, char **argv)
 	FILE *palette_file = fopen(palette_path, "r");
 	if (!palette_file)
 		die("Failed to load palette file");
-	size_t palette_size;
 	struct palette palette = create_palette(palette_file);
 	fclose(palette_file);
 	if (!palette.data)
 		die("Palette cannot be empty");
 
 	apply_palette(image, palette);
-	if (!stbi_write_jpg(output_path, image.width, image.height, image.components, image.data, jpeg_quality))
-		die("Failed to save to output image");
-
 	free(palette.data);
+
+	write_image(image, output_file_type);
 	free(image.data);
+
 
 	return 0;
 }
 
+void usage()
+{
+	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]");
+}
+
 void read_args(int argc, char **argv)
 {
+	char *output_extension = NULL;
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-o")) {
 			if ((++i) == argc)
@@ -72,6 +85,10 @@ void read_args(int argc, char **argv)
 			if ((++i) == argc)
 				die("Expected a palette file");
 			palette_path = argv[i];
+		} else if (!strcmp(argv[i], "-t")) {
+			if ((++i) == argc)
+				die("Expected an output filetype");
+			output_extension = argv[i];
 		} else {
 			usage();
 		}
@@ -83,11 +100,20 @@ void read_args(int argc, char **argv)
 		die("You need to specify an output file");
 	if (!palette_path)
 		die("You need to specify an output file");
-}
 
-void usage()
-{
-	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]");
+	if (!output_extension) {
+		output_extension = extension(output_path);
+		if (!output_extension)
+			die("Couldn't determine filetype");
+	}
+
+	if (!strcasecmp(output_extension, "png"))
+		output_file_type = FILETYPE_PNG;
+	else if (!strcasecmp(output_extension, "jpg") || !strcasecmp(output_extension, "jpeg"))
+		output_file_type = FILETYPE_JPEG;
+	else
+		die("Filetype not supported: %s", output_extension);
+
 }
 
 struct palette create_palette(FILE *palette_file)
@@ -135,4 +161,20 @@ void apply_palette(struct image image, struct palette palette)
 		image.data[i+1] = new_green;
 		image.data[i+2] = new_blue;
 	}
+}
+
+void write_image(struct image image, enum file_type file_type)
+{
+	switch (file_type) {
+	case FILETYPE_JPEG:
+		if (!stbi_write_jpg(output_path, image.width, image.height, image.components, image.data, jpeg_quality))
+			goto write_failed;
+		return;
+	case FILETYPE_PNG:
+		if (!stbi_write_png(output_path, image.width, image.height, image.components, image.data, image.width * image.components))
+			goto write_failed;
+		return;
+	}
+write_failed:
+	die("Failed to write to output image");
 }
