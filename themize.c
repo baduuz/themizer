@@ -58,6 +58,7 @@ int main(int argc, char **argv)
 	apply_palette(image, palette);
 	free(palette.data);
 
+	stbi_write_png_compression_level = png_compression;
 	write_image(image, output_format);
 	free(image.data);
 
