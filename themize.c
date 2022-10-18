@@ -32,10 +32,14 @@ static enum format output_format = FORMAT_JPEG;
 static float brightness_red = 1.0;
 static float brightness_green = 1.0;
 static float brightness_blue = 1.0;
+static int dittered = 0;
+static int reduced_colors = 0;
 
 void usage();
 void read_args(int argc, char **argv);
 struct palette create_palette(FILE *palette_file);
+void ordered_ditter(struct image image);
+void reduce_colors(struct image image);
 void apply_palette(struct image image, struct palette palette);
 void write_image(struct image image, enum format format);
 
@@ -58,6 +62,10 @@ int main(int argc, char **argv)
 	if (!palette.data)
 		die("Palette cannot be empty");
 
+	if (dittered)
+		ordered_ditter(image);
+	if (reduced_colors)
+		reduce_colors(image);
 	apply_palette(image, palette);
 	free(palette.data);
 
@@ -72,7 +80,8 @@ int main(int argc, char **argv)
 void usage()
 {
 	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
-		" [-f format] [-d distance_function] [-b[rgb] red/green/blue brightness]");
+		" [-f format] [-d distance_function] [-b[rgb] red/green/blue brightness]"
+		"[-dt] [-rd]");
 }
 
 void read_args(int argc, char **argv)
@@ -118,6 +127,10 @@ void read_args(int argc, char **argv)
 			if ((++i) == argc)
 				die("Expected a brightness value");
 			brightness_blue = strtof(argv[i], NULL);
+		} else if (!strcmp(argv[i], "-dt")) {
+			dittered = 1;
+		} else if (!strcmp(argv[i], "-rd")) {
+			reduced_colors = 1;
 		} else {
 			usage();
 		}
@@ -162,6 +175,42 @@ struct palette create_palette(FILE *palette_file)
 	}
 
 	return palette;
+}
+
+void ordered_ditter(struct image image)
+{
+#define MAP_SIZE 4
+	int map[MAP_SIZE][MAP_SIZE] = {
+		{12, 5, 6, 13},
+		{4, 0, 1, 7},
+		{11, 3, 2, 8},
+		{15, 10, 9, 14},
+	};
+
+	for (int x = 0; x < image.width; x++) {
+		for (int y = 0; y < image.height; y++) {
+			int index = (y * image.width + x) * image.components;
+			float old_red = image.data[index];
+			float old_green = image.data[index+1];
+			float old_blue = image.data[index+2];
+
+			float factor = (float)map[x%MAP_SIZE][y%MAP_SIZE] / SQR(MAP_SIZE);
+			factor = 255.0/16 * (factor-0.5);
+
+			image.data[index]   = CLAMP((int)(old_red+factor),   0, 255);
+			image.data[index+1] = CLAMP((int)(old_green+factor), 0, 255);
+			image.data[index+2] = CLAMP((int)(old_blue+factor),  0, 255);
+		}
+	}
+}
+
+void reduce_colors(struct image image)
+{
+	for (int i = 0; i < image.width * image.height * image.components; i += image.components) {
+		image.data[i]   &= 0xe0;
+		image.data[i+1] &= 0xe0;
+		image.data[i+2] &= 0xe0;
+	}
 }
 
 void apply_palette(struct image image, struct palette palette)
