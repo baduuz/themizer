@@ -81,7 +81,7 @@ void usage()
 {
 	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
 		" [-f format] [-d distance_function] [-b[rgb] red/green/blue brightness]"
-		"[-dt] [-rd]");
+		" [-dt] [-rd]");
 }
 
 void read_args(int argc, char **argv)
