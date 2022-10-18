@@ -12,6 +12,7 @@ sudo make install
 ## CMD options
 * -i: Specify path to the input image
 * -o: Specify path to the output image
+* -p: Specify path to the palette file
 * ( -f: Format of the output image (currently supported: png,jpg,bmp) )
 * ( -d: Distance function (either: linear or squared) )
 * ( -dt: Ditter the image )
