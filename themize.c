@@ -29,6 +29,9 @@ static char *output_path = NULL;
 static char *input_path = NULL;
 static char *palette_path = NULL;
 static enum format output_format = FORMAT_JPEG;
+static float brightness_red = 1.0;
+static float brightness_green = 1.0;
+static float brightness_blue = 1.0;
 
 void usage();
 void read_args(int argc, char **argv);
@@ -69,7 +72,7 @@ int main(int argc, char **argv)
 void usage()
 {
 	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
-		" [-f format] [-d distance_function]");
+		" [-f format] [-d distance_function] [-b[rgb] red/green/blue brightness]");
 }
 
 void read_args(int argc, char **argv)
@@ -103,6 +106,18 @@ void read_args(int argc, char **argv)
 				distance_function = 0;
 			else
 				die("Unknown distance function");
+		} else if (!strcmp(argv[i], "-br")) {
+			if ((++i) == argc)
+				die("Expected a brightness value");
+			brightness_red = strtof(argv[i], NULL);
+		} else if (!strcmp(argv[i], "-bg")) {
+			if ((++i) == argc)
+				die("Expected a brightness value");
+			brightness_green = strtof(argv[i], NULL);
+		} else if (!strcmp(argv[i], "-bb")) {
+			if ((++i) == argc)
+				die("Expected a brightness value");
+			brightness_blue = strtof(argv[i], NULL);
 		} else {
 			usage();
 		}
@@ -152,9 +167,9 @@ struct palette create_palette(FILE *palette_file)
 void apply_palette(struct image image, struct palette palette)
 {
 	for (int i = 0; i < image.width * image.height * image.components; i += image.components) {
-		int image_red = image.data[i];
-		int image_green = image.data[i+1];
-		int image_blue = image.data[i+2];
+		int image_red = image.data[i] * brightness_red;
+		int image_green = image.data[i+1] * brightness_green;
+		int image_blue = image.data[i+2] * brightness_blue;
 
 		unsigned char new_red = 0x00;
 		unsigned char new_green = 0x00;
