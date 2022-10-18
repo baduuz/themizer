@@ -18,3 +18,7 @@ sudo make install
 * ( -dt: Ditter the image )
 * ( -rd: Reduce the color space before applying the palette )
 * ( -b[rgb]: Brightness multiplier for RGB channels that is applied before applying the palette )
+
+## Example
+credit: https://whvn.cc/m9w1ym
+![Example image](example_image.png "Example image")
