@@ -42,13 +42,13 @@ static enum format output_format = FORMAT_JPEG;
 static float brightness_red = 1.0;
 static float brightness_green = 1.0;
 static float brightness_blue = 1.0;
-static int dittered = 0;
+static int dithered = 0;
 static int reduced_colors = 0;
 
 void usage();
 void read_args(int argc, char **argv);
 struct palette create_palette(FILE *palette_file);
-void ordered_ditter(struct image image);
+void ordered_dither(struct image image);
 void reduce_colors(struct image image);
 void apply_palette(struct image image, struct palette palette);
 void write_image(struct image image, enum format format);
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
 	if (!palette.data)
 		die("Palette cannot be empty");
 
-	if (dittered)
-		ordered_ditter(image);
+	if (dithered)
+		ordered_dither(image);
 	if (reduced_colors)
 		reduce_colors(image);
 	apply_palette(image, palette);
@@ -138,7 +138,7 @@ void read_args(int argc, char **argv)
 				die("Expected a brightness value");
 			brightness_blue = strtof(argv[i], NULL);
 		} else if (!strcmp(argv[i], "-dt")) {
-			dittered = 1;
+			dithered = 1;
 		} else if (!strcmp(argv[i], "-rd")) {
 			reduced_colors = 1;
 		} else {
@@ -187,7 +187,7 @@ struct palette create_palette(FILE *palette_file)
 	return palette;
 }
 
-void ordered_ditter(struct image image)
+void ordered_dither(struct image image)
 {
 #define MAP_SIZE 4
 	int map[MAP_SIZE][MAP_SIZE] = {
