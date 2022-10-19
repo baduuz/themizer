@@ -1,11 +1,11 @@
-# themize
+# themizer
 
 themize reduces an image to a specific color palette.
 
 ## How to install
 ```
-git clone https://github.com/MrBaduuz/themize.git
-cd themize
+git clone https://github.com/MrBaduuz/themizer.git
+cd themizer
 sudo make install
 ```
 

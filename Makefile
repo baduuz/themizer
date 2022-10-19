@@ -1,12 +1,12 @@
 include config.mk
 
-SRC = themize.c util.c
+SRC = themizer.c util.c
 OBJ = $(SRC:.c=.o)
 
-all: options themize
+all: options themizer
 
 options:
-	@echo themize build options:
+	@echo themizer build options:
 	@echo "CFLAGS   = $(CFLAGS)"
 	@echo "LDFLAGS  = $(LDFLAGS)"
 	@echo "CC       = $(CC)"
@@ -19,25 +19,25 @@ config.h:
 
 $(OBJ): config.h util.h
 
-themize: $(OBJ)
+themizer: $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
 clean:
-	$(RM) themize $(OBJ) themize-$(VERSION).tar.gz
+	$(RM) themizer $(OBJ) themizer-$(VERSION).tar.gz
 
 dist: clean
-	mkdir -p themize-$(VERSION)
+	mkdir -p themizer-$(VERSION)
 	cp Makefile config.mk config.def.h gruvbox_palette.txt nord_palette.txt\
-		stb_image.h stb_image_write.h $(SRC) util.h themize-$(VERSION)
-	tar -czf themize-$(VERSION).tar.gz themize-$(VERSION)
-	$(RM) -r themize-$(VERSION)
+		stb_image.h stb_image_write.h $(SRC) util.h themizer-$(VERSION)
+	tar -czf themizer-$(VERSION).tar.gz themizer-$(VERSION)
+	$(RM) -r themizer-$(VERSION)
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f themize $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/themize
+	cp -f themizer $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/themizer
 
 uninstall:
-	$(RM) $(DESTDIR)$(PREFIX)/bin/themize
+	$(RM) $(DESTDIR)$(PREFIX)/bin/themizer
 
 .PHONY: all clean dist options install uninstall

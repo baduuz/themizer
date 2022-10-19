@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 void usage()
 {
-	die("usage: themize [-i input_path] [-o output_path] [-p palette_path]"
+	die("usage: themizer [-i input_path] [-o output_path] [-p palette_path]"
 		" [-f format] [-d distance_function] [-b[rgb] red/green/blue brightness]"
 		" [-dt] [-rd]");
 }
@@ -89,7 +89,7 @@ void read_args(int argc, char **argv)
 	char *output_extension = NULL;
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-v")) {
-			die("themize-"VERSION);
+			die("themizer-"VERSION);
 		} else if (!strcmp(argv[i], "-o")) {
 			if ((++i) == argc)
 				die("Expected an output file");
