@@ -19,6 +19,16 @@ struct image {
 	int width, height, components;
 };
 
+struct lookup_item {
+	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
+
+	unsigned char new_red;
+	unsigned char new_green;
+	unsigned char new_blue;
+};
+
 enum format {
 	FORMAT_JPEG,
 	FORMAT_PNG,
@@ -215,10 +225,21 @@ void reduce_colors(struct image image)
 
 void apply_palette(struct image image, struct palette palette)
 {
+	struct lookup_item lookup_table[64];
+
 	for (int i = 0; i < image.width * image.height * image.components; i += image.components) {
 		int image_red = image.data[i] * brightness_red;
 		int image_green = image.data[i+1] * brightness_green;
 		int image_blue = image.data[i+2] * brightness_blue;
+
+		unsigned int lookup_index = (image_red * 3 + image_green * 5 + image_blue * 7) % 64;
+		struct lookup_item *lookup = lookup_table+lookup_index;
+		if (lookup->red == image_red && lookup->green == image_green && lookup->blue == image_blue) {
+			image.data[i] = lookup->new_red;
+			image.data[i+1] = lookup->new_green;
+			image.data[i+2] = lookup->new_blue;
+			continue;
+		}
 
 		unsigned char new_red = 0x00;
 		unsigned char new_green = 0x00;
@@ -244,6 +265,13 @@ void apply_palette(struct image image, struct palette palette)
 		image.data[i] = new_red;
 		image.data[i+1] = new_green;
 		image.data[i+2] = new_blue;
+
+		lookup->red = image_red;
+		lookup->green = image_green;
+		lookup->blue = image_blue;
+		lookup->new_red = new_red;
+		lookup->new_green = new_green;
+		lookup->new_blue = new_blue;
 	}
 }
 
