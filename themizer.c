@@ -189,12 +189,16 @@ struct palette create_palette(FILE *palette_file)
 
 void ordered_dither(struct image image)
 {
-#define MAP_SIZE 4
+#define MAP_SIZE 8
 	int map[MAP_SIZE][MAP_SIZE] = {
-		{12, 5, 6, 13},
-		{4, 0, 1, 7},
-		{11, 3, 2, 8},
-		{15, 10, 9, 14},
+		{  0, 32,  8, 40,  2, 34, 10, 42 },
+		{ 48, 16, 56, 24, 50, 18, 58, 26 },
+		{ 12, 44,  4, 36, 14, 46,  6, 38 },
+		{ 60, 28, 52, 20, 62, 30, 54, 22 },
+		{  3, 35, 11, 43,  1, 33,  9, 41 },
+		{ 51, 19, 59, 27, 49, 17, 57, 25 },
+		{ 15, 47,  7, 39, 13, 45,  5, 37 },
+		{ 63, 31, 55, 23, 61, 29, 53, 21 },
 	};
 
 	for (int x = 0; x < image.width; x++) {
